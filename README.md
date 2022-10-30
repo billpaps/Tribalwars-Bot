@@ -5,7 +5,7 @@ This is a bot for the online browser game tribal wars.
 Features:
 
 - Farming barbarian villages with farm assistant
-- Farming player villages with the.
+- Farming player villages.
 - Upgrading buildings
 - Recruiting units
 
