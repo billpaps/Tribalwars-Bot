@@ -10,13 +10,10 @@ defmodule FarmingAssistant do
 
   @impl true
   def init(state) do
-    Logger.info("Starting Farming Assistant")
-    FarmingAssistantBot.execute(state)
-    # Buildings.Manager.execute()
-    # Recruit.Recruit.execute()
-    Attack.AutoAttack.execute()
+    Logger.info("Starting Bot")
 
-    schedule_worker(state)
+    # Run fa, recruit, building, attack managers
+    Process.send(self(), :farm, [])
 
     {:ok, state}
   end
@@ -25,27 +22,42 @@ defmodule FarmingAssistant do
   def handle_info(:farm, state) do
     Logger.info("Running Farming Assistant")
 
-    FarmingAssistantBot.execute(state)
-    # Buildings.Manager.execute()
-    # Recruit.Recruit.execute()
-    Attack.AutoAttack.execute()
+    game_data =
+      Api.Game.get_intro_page()
+      |> Extractors.Common.get_game_data()
 
-    schedule_worker(state)
+    sleep()
+    FarmingAssistantBot.execute(game_data)
+    # sleep()
+    # Buildings.Manager.execute(game_data)
+    sleep()
+    # Recruit.execute()
+    # sleep()
+    # Attack.AutoAttack.execute()
+
+    schedule_worker(:farm, 10)
+
     {:noreply, state}
   end
 
-  defp schedule_worker(_state) do
-    seconds = 60 * 1000 * Enum.random(10..13) + Enum.random(1000..60000)
-    Process.send_after(self(), :farm, seconds)
+  defp schedule_worker(action, time) do
+    seconds = 60 * 1000 * Enum.random(time..(time + 2)) + Enum.random(1000..60000)
+    Process.send_after(self(), action, seconds)
   end
+
+  defp sleep, do: :timer.sleep(Enum.random(1_000..3_000))
 end
 
 defmodule FarmingAssistantBot do
-  @spec execute(opts :: keyword()) :: :ok
-  def execute(_opts \\ []) do
-    response = Wrappers.FarmingAssistant.get_farming_assistant_page()
+  # TODO: This should be a standalone genserver.
 
-    game_data = Extractors.Common.get_game_data(response)
+  @doc """
+  sends farming assistant attacks to all villages in the FA page
+  """
+  @spec execute(game_data :: map()) :: :ok
+  def execute(game_data) do
+    response = Api.Game.get_farming_assistant_page()
+
     villages_to_attack = Extractors.FarmingAssistant.get_fa_villages(response)
     template_ids = Extractors.FarmingAssistant.get_templates(response)
     max_loot = Extractors.FarmingAssistant.get_max_loot(response)
@@ -60,25 +72,5 @@ defmodule FarmingAssistantBot do
       source,
       csrf_token
     )
-  end
-
-  def get_game_data(response) do
-    ~r/updateGameData\(([^\n]*)\);/
-    |> Regex.scan(response.body)
-    |> get_element_from_list(1)
-    |> Jason.decode!()
-  end
-
-  def get_max_loot(response) do
-    ~r/<img src="http[[:print:]]*\/max_loot\/(\d)/
-    |> Regex.scan(response.body)
-    |> Enum.map(&Enum.at(&1, 1))
-    |> Enum.map(&String.to_integer/1)
-  end
-
-  defp get_element_from_list(list, element) do
-    list
-    |> List.flatten()
-    |> Enum.at(element)
   end
 end

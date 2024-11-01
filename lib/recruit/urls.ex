@@ -1,21 +1,37 @@
 defmodule Recruit.Urls do
   require Logger
 
-  @headers Application.get_env(:tw_bot, :headers)
+  @headers Application.compile_env(:tw_bot, :headers)
 
-  def get_recruit_page() do
-    "https://enc1.tribalwars.net/game.php?village=1836&screen=train"
+  def get_game_data() do
+    "https://enc1.tribalwars.net/game.php?village=24103&screen=barracks&_partial"
     |> HTTPoison.get!(@headers)
     |> Map.get(:body)
+    |> Jason.decode!()
+    |> Map.get("game_data")
   end
 
-  def post_recruit_request(csrf) do
+  @doc """
+  What and how much units to train.
+
+  ## Unit
+
+  - spear
+  - sword
+  - axe
+  - spy
+  - light
+  - heavy
+  """
+  def post_recruit_request(unit, amount, csrf) do
     url =
-      "https://enc1.tribalwars.net/game.php?village=1836&screen=train&ajaxaction=train&mode=train&"
+      "https://enc1.tribalwars.net/game.php?village=24103&screen=train&ajaxaction=train&mode=train&"
 
-    num = Enum.random(8..15)
-    body = "units%5Blight%5D=#{num}&h=#{csrf}"
+    body = "units%5B#{unit}%5D=#{amount}&h=#{csrf}"
 
-    HTTPoison.post!(url, body, @headers ++ [tribalwars_ajax: 1])
+    url
+    |> HTTPoison.post!(body, @headers ++ [tribalwars_ajax: 1])
+    |> Map.get(:body)
+    |> Jason.decode!()
   end
 end

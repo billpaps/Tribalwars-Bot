@@ -4,7 +4,7 @@ defmodule Wrappers.Buildings do
   """
 
   require Logger
-  @headers Application.get_env(:tw_bot, :headers)
+  @headers Application.compile_env(:tw_bot, :headers)
 
   def get_hq_page do
     url = "https://enc1.tribalwars.net/game.php?village=1836&screen=main"
@@ -25,7 +25,7 @@ defmodule Wrappers.Buildings do
     |> Jason.decode!()
     |> case do
       %{"error" => error} ->
-        Logger.warning("Building Manager -> failed to build #{building} (reason #{error}")
+        Logger.warning("Building Manager -> failed to build #{building} (reason #{error})")
 
       _rest ->
         Logger.info("Building Manager -> building #{building}")

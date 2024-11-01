@@ -1,10 +1,10 @@
 defmodule Attack.AutoAttack do
   require Logger
 
-  @root_village "1836"
+  @root_village "3567"
   @villages [
-    {"524|533", %{"light" => 7}}, #175
-    {"531|532", %{"light" => 7}}
+    {"483|446", %{"light" => 16}}
+    # {"484|449", %{"light" => 35}}
   ]
 
   def execute do
@@ -17,6 +17,7 @@ defmodule Attack.AutoAttack do
 
   defp send_attack([{xy, troops} | villages], hash, game_data) do
     coordinates = String.split(xy, "|")
+    :timer.sleep(Enum.random(1_000..3_000))
 
     case Wrappers.AutoAttack.confirm_attack(
            @root_village,

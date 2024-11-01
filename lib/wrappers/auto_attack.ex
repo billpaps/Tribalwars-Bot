@@ -1,5 +1,5 @@
 defmodule Wrappers.AutoAttack do
-  @headers Application.get_env(:tw_bot, :headers)
+  @headers Application.compile_env(:tw_bot, :headers)
 
   def get_map(source) do
     "https://enc1.tribalwars.net/game.php?village=#{source}&screen=map"

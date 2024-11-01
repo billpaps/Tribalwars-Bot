@@ -11,4 +11,10 @@ defmodule Extractors.Buildings do
     |> Enum.map(&Enum.at(&1, 1))
     |> Enum.reduce(%{}, fn build, acc -> Map.update(acc, build, 1, fn build -> build + 1 end) end)
   end
+
+  def extract_queue_count(body) do
+    ~r/\sbuildorder_(\w*)/
+    |> Regex.scan(body)
+    |> Enum.count()
+  end
 end
